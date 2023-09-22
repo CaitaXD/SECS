@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SECS", "SECS\SECS.csproj", "{48F419EB-17C6-4ADD-A880-A5CF4224425F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spell", "..\Spell\Spell\Spell.csproj", "{E3450CA2-B1CD-4E5E-A5E4-8C0401157C28}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{48F419EB-17C6-4ADD-A880-A5CF4224425F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48F419EB-17C6-4ADD-A880-A5CF4224425F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48F419EB-17C6-4ADD-A880-A5CF4224425F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48F419EB-17C6-4ADD-A880-A5CF4224425F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3450CA2-B1CD-4E5E-A5E4-8C0401157C28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3450CA2-B1CD-4E5E-A5E4-8C0401157C28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3450CA2-B1CD-4E5E-A5E4-8C0401157C28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3450CA2-B1CD-4E5E-A5E4-8C0401157C28}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
