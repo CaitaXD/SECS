@@ -21,14 +21,6 @@ public readonly struct TypeErasedLookup
         }
         return (List<T>)storage!;
     }
-    public IList GetList(Type type)
-    {
-        ref var storage = ref CollectionsMarshal.GetValueRefOrAddDefault(_storages, type, out bool exists);
-        if (!exists) {
-            storage = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(type))!;
-        }
-        return storage!;
-    }
     public Span<T> GetSpan<T>()
     {
         ref var storage = ref CollectionsMarshal.GetValueRefOrAddDefault(_storages, typeof(T), out bool exists);

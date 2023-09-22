@@ -119,17 +119,6 @@ public sealed class Registry
 
         return Lookup.GetSpan<T>();
     }
-    public bool HasComponent(Type type, EntityId entityId)
-    {
-        GuardAgainstType(type);
-
-        var v = RelationshipList.Find(x => x?.e == entityId);
-        if (v == null) {
-            return false;
-        }
-        var componentHandle = v.Value.c;
-        return componentHandle.Handle < Lookup.GetList(type).Count;
-    }
     public CachedQuery<EntityHandle> EntityQuery => new(this, _entityList.Select(x => new EntityHandle(this, x)));
     static void GuardAgainstType<T>()
     {
