@@ -5,8 +5,22 @@ Simple ECS
 
 Usage(Using Raylib Bindings for C#):
 
-Declaring Components
-Just plain old structs/classes, avoid using primitive types since you can only have one instance of a given component type on a instance
+Entities
+
+Create from the Registry
+```
+  public EntityHandle CreateEntity()
+    {
+        var id = new EntityId(_entityList.Count);
+        _entityList.Add(id);
+        return new EntityHandle(this, id);
+    }
+```
+
+Components:
+
+Plain old structs/classes.
+!avoid using primitive types since you can only have one instance of a given component type on a entity
 ```
 public struct BoxMesh
 {
@@ -22,8 +36,9 @@ public struct Transform2D
 }
 ```
 
-Queries
-You can get components directly from a Registry or from a EntityHandle
+Systems and Queries:
+
+Get components from the Registry or a EntityHandle
 ```
 public readonly record struct EntityHandle(Registry Registry, EntityId Id)
 {
@@ -36,7 +51,7 @@ public readonly record struct EntityHandle(Registry Registry, EntityId Id)
     public static implicit operator EntityId(EntityHandle handle) => handle.Id;
 }
 ```
-You can make quries from the Registry using EntityQuery property witch returns a CachedQuery
+Quey from the Registry using the EntityQuery property witch returns a CachedQuery
 ```
 public sealed class CachedQuery<T> : IEnumerable<T>
 {
@@ -91,9 +106,9 @@ public sealed class CachedQuery<T> : IEnumerable<T>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 ```
+Systems:
 
-Systems 
-Just inherit from BaseSystem
+Inherit from BaseSystem
 ```
 public class InputSystem : BaseSystem
 {
