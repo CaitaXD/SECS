@@ -4,12 +4,12 @@ namespace SECS.Systems;
 [PublicAPI]
 public sealed class AnonymousSystem : BaseSystem
 {
-    public Action?        OnStart         { get; init; }
-    public Action<float>? OnPhysicsUpdate { get; init; }
-    public Action?        OnUpdate        { get; init; }
-    public Action?        OnLateUpdate    { get; init; }
-    public Action?        OnRender        { get; init; }
-    public Action?        OnDispose       { get; init; }
+    public Action?        OnStart         { get; set; }
+    public Action<float>? OnPhysicsUpdate { get; set; }
+    public Action?        OnUpdate        { get; set; }
+    public Action?        OnLateUpdate    { get; set; }
+    public Action?        OnRender        { get; set; }
+    public Action?        OnDispose       { get; set; }
 
     public override void Start()                        => OnStart?.Invoke();
     public override void PhysicsUpdate(float deltaTime) => OnPhysicsUpdate?.Invoke(deltaTime);
