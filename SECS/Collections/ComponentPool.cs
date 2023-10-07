@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace SECS.Collections;
-public sealed class MemoryList : IDisposable
+public sealed class UnmanagedList : IDisposable
 {
     const int DefaultCapacity = 256;
     const int DefaultFactor   = 2;
@@ -18,7 +18,7 @@ public sealed class MemoryList : IDisposable
     public int ElementCount => _elementCount;
     public int ByteSize => _byteSize;
     public int ByteCapacity => _byteCapacity;
-    public MemoryList(int byteCapacity = DefaultCapacity)
+    public UnmanagedList(int byteCapacity = DefaultCapacity)
     {
         _data = Marshal.AllocHGlobal(byteCapacity);
         _byteCapacity = byteCapacity;
@@ -115,20 +115,20 @@ public sealed class MemoryList : IDisposable
             return true;
         }
     }
-    public unsafe void CopyTo(MemoryList other)
+    public unsafe void CopyTo(UnmanagedList other)
     {
         Unsafe.CopyBlock((void*)other._data, (void*)_data, (uint)_byteSize);
         other._byteSize = _byteSize;
         other._elementCount = _elementCount;
     }
-    public unsafe void CopyTo(Type type, int start, MemoryList other)
+    public unsafe void CopyTo(Type type, int start, UnmanagedList other)
     {
         int offset = start * Marshal.SizeOf(type);
         Unsafe.CopyBlock((void*)other._data, (void*)(_data + offset), (uint)_byteSize);
         other._byteSize = _byteSize;
         other._elementCount = _elementCount;
     }
-    public unsafe void CopyTo(Type type, int start, int count, MemoryList other)
+    public unsafe void CopyTo(Type type, int start, int count, UnmanagedList other)
     {
         int offset = start * (type.IsClass ? nint.Size : Marshal.SizeOf(type));
         int size   = count * (type.IsClass ? nint.Size : Marshal.SizeOf(type));

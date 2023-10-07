@@ -15,16 +15,19 @@ public static class EntityIdGenerator
 [PublicAPI]
 public readonly record struct Archetype(int ArchetypeId) : IComparable<Archetype>
 {
-    readonly static        IComparer<Type> TypeComparer = Comparer<Type>.Create((a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
-    public readonly static Archetype       Empty        = new(0);
+    public readonly static Archetype Empty = new(0);
 
-    readonly SortedList<Type, MemoryList> _componentPools = new(TypeComparer);
+    readonly static IComparer<Type> TypeComparer = Comparer<Type>.Create((a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
+
+    readonly SortedList<Type, UnmanagedList> _unmanagedTable = new(TypeComparer);
     readonly SortedList<EntityId, int>       _entityIndex    = new();
+    
+    public IReadOnlyList<EntityId> EntityIds => _entityIndex.Keys.AsReadOnly();
 
-    public Span<T> GetComponents<T>() => _componentPools[typeof(T)].AsSpan<T>();
+    public Span<T> GetComponents<T>() => _unmanagedTable[typeof(T)].AsSpan<T>();
     public bool TryGetComponents<T>(out Span<T> components)
     {
-        if (_componentPools.TryGetValue(typeof(T), out var componentPool)) {
+        if (_unmanagedTable.TryGetValue(typeof(T), out var componentPool)) {
             components = componentPool.AsSpan<T>();
             return true;
         }
@@ -35,20 +38,20 @@ public readonly record struct Archetype(int ArchetypeId) : IComparable<Archetype
     public void AddComponent<T>(EntityId entityId, T component)
     {
         var type = typeof(T);
-        if (_componentPools.TryGetValue(type, out var componentPool)) {
+        if (_unmanagedTable.TryGetValue(type, out var componentPool)) {
             componentPool.Add(component);
         }
         else {
-            componentPool = new MemoryList();
+            componentPool = new UnmanagedList();
             componentPool.Add(component);
-            _componentPools.Add(type, componentPool);
+            _unmanagedTable.Add(type, componentPool);
         }
         _entityIndex[entityId] = componentPool.ElementCount - 1;
     }
     public void RemoveComponentsOfEntity(EntityId entityId)
     {
         if (_entityIndex.TryGetValue(entityId, out var index)) {
-            foreach (var (type, componentPool) in _componentPools) {
+            foreach (var (type, componentPool) in _unmanagedTable) {
                 componentPool.Remove(type, index);
             }
         }
@@ -57,10 +60,10 @@ public readonly record struct Archetype(int ArchetypeId) : IComparable<Archetype
     public void CopyComponentsOfEntityToArchetype(EntityId entityId, Archetype archetype)
     {
         if (_entityIndex.TryGetValue(entityId, out var index)) {
-            foreach (var (type, componentPool) in _componentPools) {
-                if (!archetype._componentPools.TryGetValue(type, out var archetypeComponentPool)) {
-                    archetypeComponentPool = new MemoryList();
-                    archetype._componentPools.Add(type, archetypeComponentPool);
+            foreach (var (type, componentPool) in _unmanagedTable) {
+                if (!archetype._unmanagedTable.TryGetValue(type, out var archetypeComponentPool)) {
+                    archetypeComponentPool = new UnmanagedList();
+                    archetype._unmanagedTable.Add(type, archetypeComponentPool);
                 }
                 componentPool.CopyTo(type, index, 1, archetypeComponentPool);
             }
@@ -70,7 +73,7 @@ public readonly record struct Archetype(int ArchetypeId) : IComparable<Archetype
     public string SerializeToJson()
     {
         List<object> componentData = new();
-        foreach (var (type, componentPool) in _componentPools) {
+        foreach (var (type, componentPool) in _unmanagedTable) {
             for (int i = 0; i < componentPool.ElementCount; i++) {
                 componentData.Add(new
                 {
