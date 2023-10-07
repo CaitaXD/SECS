@@ -25,7 +25,12 @@ public sealed class Registry
         EntityArchetype.Add(entity, Archetype.Empty);
         return entity;
     }
-    public void DestroyEntity(EntityId entityId) {}
+    public void DestroyEntity(EntityId entityId)
+    {
+        var archetype = EntityArchetype[entityId];
+        archetype.RemoveComponentsOfEntity(entityId);
+        EntityArchetype.Remove(entityId);
+    }
     public void AddComponent<T>(EntityId entityId, T component)
     {
         var oldArchetype = EntityArchetype[entityId];
