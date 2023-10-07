@@ -18,7 +18,7 @@ public readonly record struct Archetype(int ArchetypeId) : IComparable<Archetype
     readonly static        IComparer<Type> TypeComparer = Comparer<Type>.Create((a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
     public readonly static Archetype       Empty        = new(0);
 
-    readonly SortedList<Type, ComponentPool> _componentPools = new(TypeComparer);
+    readonly SortedList<Type, MemoryList> _componentPools = new(TypeComparer);
     readonly SortedList<EntityId, int>       _entityIndex    = new();
 
     public Span<T> GetComponents<T>() => _componentPools[typeof(T)].AsSpan<T>();
@@ -39,7 +39,7 @@ public readonly record struct Archetype(int ArchetypeId) : IComparable<Archetype
             componentPool.Add(component);
         }
         else {
-            componentPool = new ComponentPool();
+            componentPool = new MemoryList();
             componentPool.Add(component);
             _componentPools.Add(type, componentPool);
         }
@@ -59,7 +59,7 @@ public readonly record struct Archetype(int ArchetypeId) : IComparable<Archetype
         if (_entityIndex.TryGetValue(entityId, out var index)) {
             foreach (var (type, componentPool) in _componentPools) {
                 if (!archetype._componentPools.TryGetValue(type, out var archetypeComponentPool)) {
-                    archetypeComponentPool = new ComponentPool();
+                    archetypeComponentPool = new MemoryList();
                     archetype._componentPools.Add(type, archetypeComponentPool);
                 }
                 componentPool.CopyTo(type, index, 1, archetypeComponentPool);

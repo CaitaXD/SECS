@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace SECS.Collections;
-public sealed class ComponentPool : IDisposable
+public sealed class MemoryList : IDisposable
 {
     const int DefaultCapacity = 256;
     const int DefaultFactor   = 2;
@@ -18,16 +18,16 @@ public sealed class ComponentPool : IDisposable
     public int ElementCount => _elementCount;
     public int ByteSize => _byteSize;
     public int ByteCapacity => _byteCapacity;
-    public ComponentPool(int byteCapacity = DefaultCapacity)
+    public MemoryList(int byteCapacity = DefaultCapacity)
     {
         _data = Marshal.AllocHGlobal(byteCapacity);
         _byteCapacity = byteCapacity;
     }
-    public unsafe void Add<T>(T component)
+    public unsafe void Add<T>(T value)
     {
         if (typeof(T) == typeof(string)) {
             int  offset = _elementCount * nint.Size;
-            nint ptr    = Marshal.StringToHGlobalAuto(Unsafe.As<T, string>(ref component));
+            nint ptr    = Marshal.StringToHGlobalAuto(Unsafe.As<T, string>(ref value));
             Marshal.WriteIntPtr(_data + offset, ptr);
             _byteSize += nint.Size;
             _elementCount += 1;
@@ -35,7 +35,7 @@ public sealed class ComponentPool : IDisposable
         }
         if (!typeof(T).IsValueType) {
             int      offset = _elementCount * nint.Size;
-            GCHandle handle = GCHandle.Alloc(component, GCHandleType.Pinned);
+            GCHandle handle = GCHandle.Alloc(value, GCHandleType.Pinned);
             Marshal.WriteIntPtr(_data + offset, (nint)handle);
             _byteSize += nint.Size;
             _elementCount += 1;
@@ -43,7 +43,31 @@ public sealed class ComponentPool : IDisposable
         }
         int size = Unsafe.SizeOf<T>();
         EnsureCapacity(size);
-        Unsafe.Write((void*)(_data + _byteSize), component);
+        Unsafe.Write((void*)(_data + _byteSize), value);
+        _byteSize += size;
+        _elementCount += 1;
+    }
+    public void Add(Type type, object value)
+    {
+        if (type == typeof(string)) {
+            int  offset = _elementCount * nint.Size;
+            nint ptr    = Marshal.StringToHGlobalAuto((string)value);
+            Marshal.WriteIntPtr(_data + offset, ptr);
+            _byteSize += nint.Size;
+            _elementCount += 1;
+            return;
+        }
+        if (!type.IsValueType) {
+            int      offset = _elementCount * nint.Size;
+            GCHandle handle = GCHandle.Alloc(value, GCHandleType.Pinned);
+            Marshal.WriteIntPtr(_data + offset, (nint)handle);
+            _byteSize += nint.Size;
+            _elementCount += 1;
+            return;
+        }
+        int size = Marshal.SizeOf(type);
+        EnsureCapacity(size);
+        Marshal.StructureToPtr(value, _data + _byteSize, false);
         _byteSize += size;
         _elementCount += 1;
     }
@@ -91,20 +115,20 @@ public sealed class ComponentPool : IDisposable
             return true;
         }
     }
-    public unsafe void CopyTo(ComponentPool other)
+    public unsafe void CopyTo(MemoryList other)
     {
         Unsafe.CopyBlock((void*)other._data, (void*)_data, (uint)_byteSize);
         other._byteSize = _byteSize;
         other._elementCount = _elementCount;
     }
-    public unsafe void CopyTo(Type type, int start, ComponentPool other)
+    public unsafe void CopyTo(Type type, int start, MemoryList other)
     {
         int offset = start * Marshal.SizeOf(type);
         Unsafe.CopyBlock((void*)other._data, (void*)(_data + offset), (uint)_byteSize);
         other._byteSize = _byteSize;
         other._elementCount = _elementCount;
     }
-    public unsafe void CopyTo(Type type, int start, int count, ComponentPool other)
+    public unsafe void CopyTo(Type type, int start, int count, MemoryList other)
     {
         int offset = start * (type.IsClass ? nint.Size : Marshal.SizeOf(type));
         int size   = count * (type.IsClass ? nint.Size : Marshal.SizeOf(type));
